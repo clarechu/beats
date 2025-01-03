@@ -57,6 +57,7 @@ func InitializeByConfigFile(configfile ConfigFile) {
 		// it is not initialized when this variable is
 		// created. See ChangeDefaultCfgfileFlag which should
 		// be called prior to flags.Parse().
+		overwrites = config.SettingFlag(nil, "E", "Configuration overwrite")
 		configfiles = config.StringArrFlag(nil, "c", configfile.ConfigFiles, "Configuration file, relative to path.config")
 		defaults = config.MustNewConfigFrom(map[string]interface{}{
 			"path": map[string]interface{}{
