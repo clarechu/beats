@@ -42,6 +42,41 @@ var (
 	allowedBackwardsCompatibleFlags []string
 )
 
+type ConfigFile struct {
+	ConfigFiles string
+	Defaults    *config.C
+	HomePath    string
+	ConfigPath  string
+	DataPath    string
+	LogsPath    string
+}
+
+func InitializeByConfigFile(configfile ConfigFile) {
+	once.Do(func() {
+		// The default config cannot include the beat name as
+		// it is not initialized when this variable is
+		// created. See ChangeDefaultCfgfileFlag which should
+		// be called prior to flags.Parse().
+		configfiles = config.StringArrFlag(nil, "c", configfile.ConfigFiles, "Configuration file, relative to path.config")
+		defaults = config.MustNewConfigFrom(map[string]interface{}{
+			"path": map[string]interface{}{
+				"home":   ".", // to be initialized by beat
+				"config": "${path.home}",
+				"data":   filepath.Join("${path.home}", "data"),
+				"logs":   filepath.Join("${path.home}", "logs"),
+			},
+		})
+		homePath = config.ConfigOverwriteFlag(nil, overwrites, "path.home", "path.home", configfile.HomePath, "Home path")
+		AddAllowedBackwardsCompatibleFlag("path.home")
+		configPath = config.ConfigOverwriteFlag(nil, overwrites, "path.config", "path.config", configfile.ConfigPath, "Configuration path")
+		AddAllowedBackwardsCompatibleFlag("path.config")
+		_ = config.ConfigOverwriteFlag(nil, overwrites, "path.data", "path.data", configfile.DataPath, "Data path")
+		AddAllowedBackwardsCompatibleFlag("path.data")
+		_ = config.ConfigOverwriteFlag(nil, overwrites, "path.logs", "path.logs", configfile.LogsPath, "Logs path")
+		AddAllowedBackwardsCompatibleFlag("path.logs")
+	})
+}
+
 func Initialize() {
 	once.Do(func() {
 		// The default config cannot include the beat name as
